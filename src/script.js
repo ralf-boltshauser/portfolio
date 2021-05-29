@@ -26,7 +26,12 @@ const textureLoader = new THREE.TextureLoader();
  */
 
 const fontLoader = new THREE.FontLoader();
-
+let elements = [];
+let texts = {
+  name: null,
+  mail: null,
+};
+let material;
 fontLoader.load("/fonts/helvetiker_regular.typeface.json", (font) => {
   const textGeometryName = new THREE.TextBufferGeometry("Ralf Boltshauser", {
     font,
@@ -42,65 +47,70 @@ fontLoader.load("/fonts/helvetiker_regular.typeface.json", (font) => {
   textGeometryName.computeBoundingBox();
   textGeometryName.center();
 
-  const material = new THREE.MeshNormalMaterial();
+  material = new THREE.MeshNormalMaterial();
+
   // textMaterial.wireframe = true
   const name = new THREE.Mesh(textGeometryName, material);
   scene.add(name);
+  texts.name = name;
 
-  const textGeometryMail = new THREE.TextBufferGeometry("ralf@boltshauser.com", {
-    font,
-    size: 0.5,
-    height: 0.2,
-    curveSegments: 5,
-    bevelEnabled: true,
-    bevelThickness: 0.03,
-    bevelSize: 0.02,
-    bevelOffset: 0,
-    bevelSegments: 4,
-  });
+  const textGeometryMail = new THREE.TextBufferGeometry(
+    "ralf@boltshauser.com",
+    {
+      font,
+      size: 0.5,
+      height: 0.2,
+      curveSegments: 5,
+      bevelEnabled: true,
+      bevelThickness: 0.03,
+      bevelSize: 0.02,
+      bevelOffset: 0,
+      bevelSegments: 4,
+    }
+  );
   textGeometryMail.computeBoundingBox();
   textGeometryMail.center();
-  
 
   // textMaterial.wireframe = true
   const textMail = new THREE.Mesh(textGeometryMail, material);
   textMail.position.y -= textGeometryMail.boundingBox.max.y * 2;
-  
+
   scene.add(textMail);
+  texts.mail = textMail;
 
   const donutGeometry = new THREE.TorusBufferGeometry(0.3, 0.2, 20, 43);
 
-  for (let i = 0; i < 200; i++) {
-
+  for (let i = 0; i < 800; i++) {
     const donut = new THREE.Mesh(donutGeometry, material);
 
-    donut.position.x = (Math.random() - 0.5) * 30
-    donut.position.y = (Math.random() - 0.5) * 30
-    donut.position.z = (Math.random() - 0.5) * 30
+    donut.position.x = (Math.random() - 0.5) * 30;
+    donut.position.y = (Math.random() - 0.5) * 100;
+    donut.position.z = (Math.random() - 0.5) * 30;
 
-    donut.rotation.x = Math.random() * Math.PI
-    donut.rotation.y= Math.random() * Math.PI
+    donut.rotation.x = Math.random() * Math.PI;
+    donut.rotation.y = Math.random() * Math.PI;
 
-    const scale = Math.random() + 0.5
-    donut.scale.set(scale,scale,scale)
+    const scale = Math.random() + 0.5;
+    donut.scale.set(scale, scale, scale);
     scene.add(donut);
+    elements.push(donut);
   }
-  
-  const cubeGeometry = new THREE.BoxBufferGeometry(0.3,0.3,0.3);
-  for (let i = 0; i < 200; i++) {
 
+  const cubeGeometry = new THREE.BoxBufferGeometry(0.3, 0.3, 0.3);
+  for (let i = 0; i < 800; i++) {
     const cube = new THREE.Mesh(cubeGeometry, material);
 
-    cube.position.x = (Math.random() - 0.5) * 30
-    cube.position.y = (Math.random() - 0.5) * 30
-    cube.position.z = (Math.random() - 0.5) * 30
+    cube.position.x = (Math.random() - 0.5) * 30;
+    cube.position.y = (Math.random() - 0.5) * 100;
+    cube.position.z = (Math.random() - 0.5) * 30;
 
-    cube.rotation.x = Math.random() * Math.PI
-    cube.rotation.y= Math.random() * Math.PI
+    cube.rotation.x = Math.random() * Math.PI;
+    cube.rotation.y = Math.random() * Math.PI;
 
-    const scale = Math.random() + 0.5
-    cube.scale.set(scale,scale,scale)
+    const scale = Math.random() + 0.5;
+    cube.scale.set(scale, scale, scale);
     scene.add(cube);
+    elements.push(cube);
   }
 });
 
@@ -165,6 +175,19 @@ const tick = () => {
   // Update controls
   controls.update();
 
+  elements.forEach((element, index) => {
+    element.position.y -= (0.01 * elapsedTime) / 10;
+    element.rotation.x += index / elements.length / 100;
+    element.rotation.y += index / elements.length / 100;
+    if (element.position.y < -50) {
+      element.position.y = 50;
+    }
+  });
+
+  if (texts.name != null && texts.mail != null) {
+    texts.name.rotation.y += 0.001;
+    texts.mail.rotation.y += 0.001;
+  }
 
   // Render
   renderer.render(scene, camera);
@@ -174,3 +197,12 @@ const tick = () => {
 };
 
 tick();
+
+window.addEventListener("keydown", (e) => {
+  if (e.key == "w") {
+    material.wireframe = !material.wireframe;
+  } else if (e.key == " ") {
+    camera.lookAt(texts.mail.position);
+    window.location.href = "mailto:ralf@boltshauser.com";
+  }
+});
