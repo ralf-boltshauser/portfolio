@@ -28,7 +28,7 @@ const textureLoader = new THREE.TextureLoader();
 const fontLoader = new THREE.FontLoader();
 
 fontLoader.load("/fonts/helvetiker_regular.typeface.json", (font) => {
-  const textGeometry = new THREE.TextBufferGeometry("Ralf Boltshauser", {
+  const textGeometryName = new THREE.TextBufferGeometry("Ralf Boltshauser", {
     font,
     size: 0.5,
     height: 0.2,
@@ -39,13 +39,34 @@ fontLoader.load("/fonts/helvetiker_regular.typeface.json", (font) => {
     bevelOffset: 0,
     bevelSegments: 4,
   });
-  textGeometry.computeBoundingBox();
-  textGeometry.center();
+  textGeometryName.computeBoundingBox();
+  textGeometryName.center();
 
   const material = new THREE.MeshNormalMaterial();
   // textMaterial.wireframe = true
-  const text = new THREE.Mesh(textGeometry, material);
-  scene.add(text);
+  const name = new THREE.Mesh(textGeometryName, material);
+  scene.add(name);
+
+  const textGeometryMail = new THREE.TextBufferGeometry("ralf@boltshauser.com", {
+    font,
+    size: 0.5,
+    height: 0.2,
+    curveSegments: 5,
+    bevelEnabled: true,
+    bevelThickness: 0.03,
+    bevelSize: 0.02,
+    bevelOffset: 0,
+    bevelSegments: 4,
+  });
+  textGeometryMail.computeBoundingBox();
+  textGeometryMail.center();
+  
+
+  // textMaterial.wireframe = true
+  const textMail = new THREE.Mesh(textGeometryMail, material);
+  textMail.position.y -= textGeometryMail.boundingBox.max.y * 2;
+  
+  scene.add(textMail);
 
   const donutGeometry = new THREE.TorusBufferGeometry(0.3, 0.2, 20, 43);
 
