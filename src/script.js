@@ -2,7 +2,7 @@ import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { TorusBufferGeometry } from "three";
-import gsap from 'gsap'
+import gsap from "gsap";
 
 /**
  * Base
@@ -118,8 +118,8 @@ fontLoader.load("/fonts/helvetiker_regular.typeface.json", (font) => {
  * Raycaster
  */
 const raycaster = new THREE.Raycaster();
-let currentIntersect = null
-let currentTextIntersect = null
+let currentIntersect = null;
+let currentTextIntersect = null;
 /**
  * Sizes
  */
@@ -168,9 +168,35 @@ const mouse = new THREE.Vector2();
 window.addEventListener("mousemove", (event) => {
   mouse.x = (event.clientX / sizes.width) * 2 - 1;
   mouse.y = -(event.clientY / sizes.height) * 2 + 1;
-
 });
+window.addEventListener("touchstart", (event) => {
+  mouse.x = (event.changedTouches[0].clientX / sizes.width) * 2 - 1;
+  mouse.y = -(event.changedTouches[0].clientY / sizes.height) * 2 + 1;
+  console.log(mouse);
 
+  setTimeout(() => {
+    if (currentIntersect) {
+      currentIntersect.object.geometry = new THREE.SphereBufferGeometry(
+        Math.random() / 2 + 0.2,
+        16,
+        16
+      );
+    }
+
+    if (currentTextIntersect) {
+      if (currentTextIntersect.object == texts[1]) {
+        gsap.fromTo(
+          texts[1].rotation,
+          { y: 0 },
+          { duration: 1, delay: 0, y: Math.PI * 2 }
+        );
+        setTimeout(() => {
+          window.location.href = "mailto:ralf@boltshauser.com";
+        }, 1000);
+      }
+    }
+  }, 1000);
+});
 /**
  * Renderer
  */
@@ -211,8 +237,7 @@ const tick = () => {
     object.material = new THREE.MeshNormalMaterial();
   }
   if (intersects.length) {
-    
-    currentIntersect = intersects[0]
+    currentIntersect = intersects[0];
   } else {
     currentIntersect = null;
   }
@@ -220,16 +245,13 @@ const tick = () => {
   if (texts.length > 0) {
     const textIntersects = raycaster.intersectObjects(texts);
     if (textIntersects.length) {
-    
       currentTextIntersect = textIntersects[0];
-      
-      texts[1].material.wireframe = true;  
+      console.log("intersecting text");
     } else {
       currentTextIntersect = null;
-      texts[1].material.wireframe = false;  
     }
   }
-  
+
   // Render
   renderer.render(scene, camera);
 
@@ -245,21 +267,25 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-window.addEventListener('click', () =>
-{
-    if(currentIntersect)
-    {
-      currentIntersect.object.geometry = new THREE.SphereBufferGeometry(Math.random() / 2 + 0.2,16,16)
+window.addEventListener("click", () => {
+  if (currentIntersect) {
+    currentIntersect.object.geometry = new THREE.SphereBufferGeometry(
+      Math.random() / 2 + 0.2,
+      16,
+      16
+    );
+  }
+
+  if (currentTextIntersect) {
+    if (currentTextIntersect.object == texts[1]) {
+      gsap.fromTo(
+        texts[1].rotation,
+        { y: 0 },
+        { duration: 1, delay: 0, y: Math.PI * 2 }
+      );
+      setTimeout(() => {
+        window.location.href = "mailto:ralf@boltshauser.com";
+      }, 1000);
     }
-    
-    if (currentTextIntersect){
-      if (currentTextIntersect.object == texts[1]){
-        gsap.to(texts[1].rotation, { duration: 1, delay: 0, y: Math.PI * 2 })
-        setTimeout(() => {
-          
-        window.location.href = "mailto:ralf@boltshauser.com"
-        }, 1000)
-      }
-    }
-    
-})
+  }
+});
