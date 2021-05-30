@@ -2,6 +2,7 @@ import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { TorusBufferGeometry } from "three";
+import gsap from 'gsap'
 
 /**
  * Base
@@ -27,11 +28,8 @@ const textureLoader = new THREE.TextureLoader();
 
 const fontLoader = new THREE.FontLoader();
 let elements = [];
-let texts = {
-  name: null,
-  mail: null,
-};
-let material;
+let texts = [];
+let textmaterial;
 fontLoader.load("/fonts/helvetiker_regular.typeface.json", (font) => {
   const textGeometryName = new THREE.TextBufferGeometry("Ralf Boltshauser", {
     font,
@@ -47,12 +45,12 @@ fontLoader.load("/fonts/helvetiker_regular.typeface.json", (font) => {
   textGeometryName.computeBoundingBox();
   textGeometryName.center();
 
-  material = new THREE.MeshNormalMaterial();
+  textmaterial = new THREE.MeshNormalMaterial();
 
   // textMaterial.wireframe = true
-  const name = new THREE.Mesh(textGeometryName, material);
+  const name = new THREE.Mesh(textGeometryName, textmaterial);
   scene.add(name);
-  texts.name = name;
+  texts[0] = name;
 
   const textGeometryMail = new THREE.TextBufferGeometry(
     "ralf@boltshauser.com",
@@ -72,15 +70,16 @@ fontLoader.load("/fonts/helvetiker_regular.typeface.json", (font) => {
   textGeometryMail.center();
 
   // textMaterial.wireframe = true
-  const textMail = new THREE.Mesh(textGeometryMail, material);
+  const textMail = new THREE.Mesh(textGeometryMail, textmaterial);
   textMail.position.y -= textGeometryMail.boundingBox.max.y * 2;
 
   scene.add(textMail);
-  texts.mail = textMail;
+  texts[1] = textMail;
 
   const donutGeometry = new THREE.TorusBufferGeometry(0.3, 0.2, 20, 43);
 
   for (let i = 0; i < 800; i++) {
+    let material = new THREE.MeshNormalMaterial();
     const donut = new THREE.Mesh(donutGeometry, material);
 
     donut.position.x = (Math.random() - 0.5) * 30;
@@ -98,6 +97,7 @@ fontLoader.load("/fonts/helvetiker_regular.typeface.json", (font) => {
 
   const cubeGeometry = new THREE.BoxBufferGeometry(0.3, 0.3, 0.3);
   for (let i = 0; i < 800; i++) {
+    let material = new THREE.MeshNormalMaterial();
     const cube = new THREE.Mesh(cubeGeometry, material);
 
     cube.position.x = (Math.random() - 0.5) * 30;
@@ -114,6 +114,12 @@ fontLoader.load("/fonts/helvetiker_regular.typeface.json", (font) => {
   }
 });
 
+/**
+ * Raycaster
+ */
+const raycaster = new THREE.Raycaster();
+let currentIntersect = null
+let currentTextIntersect = null
 /**
  * Sizes
  */
@@ -154,6 +160,16 @@ scene.add(camera);
 // Controls
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
+/**
+ * Mouse
+ */
+const mouse = new THREE.Vector2();
+
+window.addEventListener("mousemove", (event) => {
+  mouse.x = (event.clientX / sizes.width) * 2 - 1;
+  mouse.y = -(event.clientY / sizes.height) * 2 + 1;
+
+});
 
 /**
  * Renderer
@@ -184,11 +200,36 @@ const tick = () => {
     }
   });
 
-  if (texts.name != null && texts.mail != null) {
-    texts.name.rotation.y += 0.001;
-    texts.mail.rotation.y += 0.001;
+  const rayOrigin = new THREE.Vector3(-30, 0, 0);
+  const rayDirection = new THREE.Vector3(1, 0, 0);
+  rayDirection.normalize();
+
+  raycaster.setFromCamera(mouse, camera);
+
+  const intersects = raycaster.intersectObjects(elements);
+  for (const object of elements) {
+    object.material = new THREE.MeshNormalMaterial();
+  }
+  if (intersects.length) {
+    
+    currentIntersect = intersects[0]
+  } else {
+    currentIntersect = null;
   }
 
+  if (texts.length > 0) {
+    const textIntersects = raycaster.intersectObjects(texts);
+    if (textIntersects.length) {
+    
+      currentTextIntersect = textIntersects[0];
+      
+      texts[1].material.wireframe = true;  
+    } else {
+      currentTextIntersect = null;
+      texts[1].material.wireframe = false;  
+    }
+  }
+  
   // Render
   renderer.render(scene, camera);
 
@@ -201,8 +242,24 @@ tick();
 window.addEventListener("keydown", (e) => {
   if (e.key == "w") {
     material.wireframe = !material.wireframe;
-  } else if (e.key == " ") {
-    camera.lookAt(texts.mail.position);
-    window.location.href = "mailto:ralf@boltshauser.com";
   }
 });
+
+window.addEventListener('click', () =>
+{
+    if(currentIntersect)
+    {
+      currentIntersect.object.geometry = new THREE.SphereBufferGeometry(Math.random() / 2 + 0.2,16,16)
+    }
+    
+    if (currentTextIntersect){
+      if (currentTextIntersect.object == texts[1]){
+        gsap.to(texts[1].rotation, { duration: 1, delay: 0, y: Math.PI * 2 })
+        setTimeout(() => {
+          
+        window.location.href = "mailto:ralf@boltshauser.com"
+        }, 1000)
+      }
+    }
+    
+})
