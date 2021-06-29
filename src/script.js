@@ -31,7 +31,7 @@ let elements = [];
 let texts = [];
 let textmaterial;
 fontLoader.load("/fonts/helvetiker_regular.typeface.json", (font) => {
-  const textGeometryName = new THREE.TextBufferGeometry("Ralf Boltshauser", {
+  const textGeometryName = new THREE.TextBufferGeometry("Ralf Boltshauser, bro gib sechser", {
     font,
     size: 0.5,
     height: 0.2,
